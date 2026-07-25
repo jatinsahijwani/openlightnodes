@@ -14,6 +14,17 @@ This repo is fully open. Everything used to stand up and measure a production en
 
 More regions and independent operators coming — see [ROADMAP.md](./ROADMAP.md).
 
+## Status page
+
+Live health and uptime, by region: **[status.openlightnodes.org](https://status.openlightnodes.org)**
+
+Each endpoint is watched two ways: a push monitor that calls `GetLightdInfo` and
+verifies the node is both serving *and* within a few blocks of the chain tip, and
+a TCP check on `:443` that also tracks TLS certificate expiry. Outage history is
+kept publicly. The monitor runs on a separate host from the nodes, so the page
+stays up when a node does not. Setup is documented in
+[docs/status-page.md](./docs/status-page.md).
+
 ## Principles
 
 - **Privacy by default.** No logging of client IPs or addresses. Caddy access logging is disabled outright. A clear, public privacy policy.
@@ -25,8 +36,9 @@ More regions and independent operators coming — see [ROADMAP.md](./ROADMAP.md)
 
 ```
 .
-├── deploy/               # AWS provisioning + node bootstrap + benchmark scripts
+├── deploy/               # AWS provisioning, node + monitor bootstrap, benchmark, health push
 ├── benchmark-report.md   # Zebra (archive) vs Zakura (pruned), fully measured
+├── docs/status-page.md   # how the public status page is built
 ├── RUN-A-NODE.md         # how to run your own independent node
 ├── ROADMAP.md            # phased plan
 └── CONTRIBUTING.md       # how to contribute / add your operator

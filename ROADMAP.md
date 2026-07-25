@@ -8,7 +8,7 @@ Deliberately modest and ship-first. Real, running infrastructure appears early a
 - [x] Zebra + lightwalletd, TLS via Caddy, no client-IP logging
 - [x] Reproducible benchmark: Zebra archive vs Zakura pruned ([report](./benchmark-report.md))
 - [x] Open-source deploy scripts
-- [ ] Public status page (health / uptime by region)
+- [x] Public status page ([status.openlightnodes.org](https://status.openlightnodes.org)), health and uptime by region, on a host separate from the nodes
 - [ ] Second region
 
 ## Phase 2 — Operators and hardening
