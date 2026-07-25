@@ -71,12 +71,49 @@ The script reports **up** with `height N (lag k)` when serving and within `MAX_L
 ## Step 6 — Build the public status page
 
 Kuma UI → **Status Pages** → New:
-- Title: `Open Light Nodes — Status`, slug `status` (or set it as the domain root).
-- Add a **group** named `Mumbai · in`, and add both monitors (Push + TCP) to it.
-- Enable "Show powered by" off if you like, set the theme, and **publish**.
-- Optionally map the status page to the domain root so `status.openlightnodes.org` shows it directly.
+- Title `Open Light Nodes Status`, slug `status`. The page is then served at
+  `/status/status`.
+- Add a **group** named `Mumbai · in` and add both monitors (Push + TCP) to it.
+  Put the push monitor first, since it is the meaningful signal.
+- Turn on **Show certificate expiry**, set the theme, and **publish**.
+
+By default the domain root redirects to the login form, which is not what a
+visitor wants. Point it at the status page instead: **Settings → General → Entry
+Page**, choose the status page. After that `https://status.openlightnodes.org/`
+lands on `/status/status`.
 
 Add the status page link to your repo README and the forum thread.
+
+## Step 7 — Verify it end to end
+
+Do not trust the UI alone. Kuma exposes the published page as JSON, so you can
+confirm what visitors actually get:
+
+```bash
+# Structure: title, published flag, groups and their monitors
+curl -s https://status.openlightnodes.org/api/status-page/status \
+  | jq '{title:.config.title, published:.config.published,
+         groups:[.publicGroupList[]|{name, monitors:[.monitorList[].name]}]}'
+
+# Live data: 1 means up, plus the push message and ping
+curl -s https://status.openlightnodes.org/api/status-page/heartbeat/status \
+  | jq '.heartbeatList|to_entries|map({monitor:.key, last:(.value|last|{status,msg,ping})})'
+```
+
+A healthy push monitor reports messages like `height 3424594 (lag 0)`. Confirm
+the cron cadence too, since a single manual test run looks identical to a working
+schedule in the UI:
+
+```bash
+docker exec uptime-kuma sqlite3 /app/data/kuma.db \
+  "select time,status,msg from heartbeat where monitor_id=1 order by id desc limit 5;"
+```
+
+Timestamps should be about 60 seconds apart.
+
+Note that 24 hour uptime will look poor at first. Kuma records a `down` beat for
+every interval between creating the push monitor and installing the cron, and
+those stay in the history until they age out.
 
 ## Automating the provisioning
 
