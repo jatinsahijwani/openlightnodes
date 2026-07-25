@@ -1,0 +1,9 @@
+# Never commit key material. 02-launch-nodes.sh writes the EC2 private key here.
+*.pem
+*.key
+
+# Local benchmark output
+benchmark-report-*.md
+
+# OS noise
+.DS_Store
