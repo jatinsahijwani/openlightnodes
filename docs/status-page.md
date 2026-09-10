@@ -6,7 +6,12 @@ A public page at `status.openlightnodes.org` showing endpoint health/uptime **by
 
 - **Host the monitor on a separate small box**, not on the node. If it lived on the node, the page would go dark exactly when the node fails. A tiny box is plenty (Uptime Kuma is light): a `t3.micro` on AWS, or any ~$5/mo VPS. Running the *monitor* on a big cloud is fine — it's not the wallet-serving path, so it doesn't affect decentralization.
 - **Two signals per endpoint:**
-  1. **Push monitor (primary)** — a cron script on the monitor box calls `GetLightdInfo`, checks the node is serving *and* within a few blocks of the tip, and pushes the result. This is what makes the page meaningful.
+  1. **Push monitor (primary)** — a cron script on the monitor box calls `GetLightdInfo`
+     to check tip lag, and then calls `GetBlock` for a real block just below the tip and
+     requires real block data back. Both halves matter. `GetLightdInfo` reports its heights
+     from the *backend node* (zebra), so they sit at the chain tip even when lightwalletd's
+     own ingester is wedged and cannot serve a single block — asking for an actual block is
+     what catches that. This is what makes the page meaningful.
   2. **TCP monitor (secondary)** — Uptime Kuma pings `host:443` directly; also tracks TLS cert expiry.
 - **Group monitors by region** on the status page ("Mumbai · in"), so adding Singapore later is just a new group.
 

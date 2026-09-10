@@ -10,7 +10,7 @@ This repo is fully open. Everything used to stand up and measure a production en
 
 | Endpoint | Region | Backend | Notes |
 |---|---|---|---|
-| `zebra.openlightnodes.org:443` | Mumbai (in) | Zebra archive + lightwalletd `v0.4.19` | TLS (Let's Encrypt), no client-IP logging |
+| `zebra.openlightnodes.org:443` | Mumbai (in) | Zebra archive + lightwalletd `v0.5.4` | TLS (Let's Encrypt), no client-IP logging |
 
 More regions and independent operators coming — see [ROADMAP.md](./ROADMAP.md).
 
@@ -18,9 +18,11 @@ More regions and independent operators coming — see [ROADMAP.md](./ROADMAP.md)
 
 Live health and uptime, by region: **[status.openlightnodes.org](https://status.openlightnodes.org)**
 
-Each endpoint is watched two ways: a push monitor that calls `GetLightdInfo` and
-verifies the node is both serving *and* within a few blocks of the chain tip, and
-a TCP check on `:443` that also tracks TLS certificate expiry. Outage history is
+Each endpoint is watched two ways: a push monitor that checks tip lag via
+`GetLightdInfo` and then actually requests a block near the tip with `GetBlock`
+(the heights alone come from the backend node, so they stay green even if the
+indexer is wedged — only asking for a real block catches that), and a TCP check
+on `:443` that also tracks TLS certificate expiry. Outage history is
 kept publicly. The monitor runs on a separate host from the nodes, so the page
 stays up when a node does not. Setup is documented in
 [docs/status-page.md](./docs/status-page.md).
