@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# health-push.sh — checks an Open Light Nodes endpoint and pushes the result to
+# health-push.sh: checks an Open Light Nodes endpoint and pushes the result to
 # an Uptime Kuma "Push" monitor. Run every ~60s from the MONITORING box (not the
 # node box) so it exercises the real public path.
 #
@@ -13,6 +13,14 @@
 # 3428143 and lightwalletd v0.4.19 could not parse the new ZIP-229 coinbase
 # format, so this endpoint served nothing for ~6 weeks while the lag check stayed
 # green. So we also ask for an actual block and require real data back.
+#
+# Lag is also measured against an independent reference tip, taken from other
+# operators' public endpoints (REF_ENDPOINTS). estimatedHeight comes from our own
+# node, so a node that has forked off at a network upgrade under-reports it. At
+# NU7 (block 3543405) Zebra 6.2.2 stalled at 3543404 and estimated 3555094 while
+# the real network was at 3578297. The highest of estimatedHeight and the
+# reference heights is used as the tip. If no reference answers, the check falls
+# back to estimatedHeight alone.
 set -uo pipefail
 
 HOST="${HOST:-zebra.openlightnodes.org}"      # endpoint domain
@@ -20,6 +28,7 @@ ENDPOINT="${HOST}:443"
 PUSH_URL="${PUSH_URL:?set PUSH_URL to your Kuma push URL, e.g. https://status.openlightnodes.org/api/push/XXXX}"
 MAX_LAG="${MAX_LAG:-5}"                        # blocks behind tip before we call it degraded
 SERVE_DEPTH="${SERVE_DEPTH:-10}"               # how far below tip to request a block (avoids reorg edge)
+REF_ENDPOINTS="${REF_ENDPOINTS:-zec.rocks:443 na.zec.rocks:443}"  # independent tips; empty disables
 METHOD="cash.z.wallet.sdk.rpc.CompactTxStreamer/GetLightdInfo"
 GETBLOCK="cash.z.wallet.sdk.rpc.CompactTxStreamer/GetBlock"
 
@@ -41,9 +50,16 @@ if [ -z "$BH" ] || [ -z "$EH" ]; then
   exit 0
 fi
 
-lag=$(( EH - BH ))
+TIP=$EH
+for ref in $REF_ENDPOINTS; do
+  RH=$(grpcurl -max-time 10 "$ref" "$METHOD" 2>/dev/null | jq -r '.blockHeight // empty' 2>/dev/null)
+  case "$RH" in ''|*[!0-9]*) continue ;; esac
+  [ "$RH" -gt "$TIP" ] && TIP=$RH
+done
+
+lag=$(( TIP - BH ))
 if [ "$lag" -gt "$MAX_LAG" ]; then
-  push "status=down&msg=lagging%20${lag}%20blocks%20(height%20${BH})&ping=${ms}"
+  push "status=down&msg=lagging%20${lag}%20blocks%20(height%20${BH},%20tip%20${TIP})&ping=${ms}"
   exit 0
 fi
 

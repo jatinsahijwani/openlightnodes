@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# 02-launch-nodes.sh — launch the two Zcash nodes in ap-south-1 (Mumbai).
-#   - node A: full Zebra + Zaino     (t3.xlarge, 300 GB gp3)
+# 02-launch-nodes.sh: launch the two Zcash nodes in ap-south-1 (Mumbai).
+#   - node A: archive Zebra + lightwalletd (t3.xlarge, 450 GB gp3)
 #   - node B: Zakura pruned + Zaino  (t3.large,   60 GB gp3)
 # Creates a key pair + a security group locked to YOUR current public IP for SSH.
 # Public ports opened: 443 (TLS endpoint via Caddy) and 8233 (Zebra P2P). gRPC stays local.
@@ -20,7 +20,7 @@ AMI=$(aws ssm get-parameters --region "$REGION" \
   --names /aws/service/canonical/ubuntu/server/22.04/stable/current/amd64/hvm/ebs-gp2/ami-id \
   --query 'Parameters[0].Value' --output text 2>/dev/null) || AMI=""
 if [ -z "$AMI" ] || [ "$AMI" = "None" ]; then
-  echo "SSM lookup unavailable — resolving via describe-images (owner: Canonical)."
+  echo "SSM lookup unavailable; resolving via describe-images (owner: Canonical)."
   AMI=$(aws ec2 describe-images --region "$REGION" --owners 099720109477 \
     --filters 'Name=name,Values=ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*' \
               'Name=state,Values=available' \
@@ -74,7 +74,7 @@ launch () {
 }
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
-ZEBRA_ID=$(launch "zcash-zebra-mumbai"  t3.xlarge 300 "$HERE/zebra-userdata.sh")
+ZEBRA_ID=$(launch "zcash-zebra-mumbai"  t3.xlarge 450 "$HERE/zebra-userdata.sh")  # 300 GB no longer fits the chain
 ZAKURA_ID=$(launch "zcash-zakura-mumbai" t3.large  60  "$HERE/zakura-userdata.sh")
 
 echo "Waiting for instances to enter 'running'..."

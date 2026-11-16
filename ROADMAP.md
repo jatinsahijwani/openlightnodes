@@ -2,24 +2,25 @@
 
 Deliberately modest and ship-first. Real, running infrastructure appears early and can be evaluated by the community and wallet teams before anything larger is proposed.
 
-## Phase 1 — Foundation ✅ (in progress)
+## Phase 1: Foundation ✅ (in progress)
 
 - [x] First archive endpoint live: `zebra.openlightnodes.org:443` (Mumbai)
 - [x] Zebra + lightwalletd, TLS via Caddy, no client-IP logging
+- [x] Survived Ironwood (NU6.3) and NU7: Zebra 7.0.0 + lightwalletd v0.6.1
 - [x] Reproducible benchmark: Zebra archive vs Zakura pruned ([report](./benchmark-report.md))
 - [x] Open-source deploy scripts
 - [x] Public status page ([status.openlightnodes.org](https://status.openlightnodes.org)), health and uptime by region, on a host separate from the nodes
 - [ ] Second region
 
-## Phase 2 — Operators and hardening
+## Phase 2: Operators and hardening
 
 - [ ] Onboard the first independent community operators (see [RUN-A-NODE.md](./RUN-A-NODE.md))
 - [ ] Public node/health map of participating operators
 - [ ] Stricter privacy defaults documented; Tor hidden service
-- [ ] Monitoring, alerting, and incident-response runbooks
-- [ ] Move to Zaino once it supports the current node value pools (tracking upstream)
+- [ ] Monitoring, alerting, and incident-response runbooks, including a network-upgrade checklist
+- [ ] Move to Zaino (planned) once it supports the current node value pools and a v29-compatible Zebra backend (tracking upstream)
 
-## Phase 3 — Ecosystem integration and resilience
+## Phase 3: Ecosystem integration and resilience
 
 - [ ] Comprehensive wallet-integration docs; coordinate test integrations
 - [ ] One-command / appliance-friendly self-hosting packages
